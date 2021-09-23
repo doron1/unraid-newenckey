@@ -1,0 +1,117 @@
+<?xml version='1.0' standalone='yes'?>
+
+<!DOCTYPE PLUGIN [
+<!ENTITY name      "unraid-newenckey">
+<!ENTITY author    "doron">
+<!ENTITY version   "0.8">
+<!ENTITY pluginURL "https://raw.githubusercontent.com/doron1/unraid-newenckey/master/newenckey.plg">
+<!ENTITY plugindir "/usr/local/emhttp/plugins/&name;">
+<!ENTITY pluginpermdir "/boot/config/plugins/&name;">
+<!ENTITY support   "https://forums.unraid.net/topic/85495-unraid-newenckey-change-your-drive-encryption-unlock-key/">
+<!ENTITY script "unraid-newenckey">
+<!ENTITY scriptURL "https://raw.githubusercontent.com/doron1/unraid-newenckey/master/&script;">
+<!ENTITY scriptdir "/usr/local/sbin">
+<!ENTITY debug      "false">
+<!ENTITY copyright      "(c) 2019-2021 @doron - CC BY-SA 4.0">
+]>
+
+<PLUGIN  name="&name;"
+         author="&author;"
+         version="&version;"
+         min="6.7.0"
+         pluginURL="&pluginURL;"
+         support="&support;">
+
+<CHANGES>
+
+###v0.8
+- Repackage script as plugin
+- Add "usage" text
+- Add underscore to valid characters
+
+###v0.7
+- Update for Unraid 6.10: lsblk has changed in an incompatible way. This version 0.7
+  should be backwards compatible with previous Unraid versions.
+
+###v0.6
+- Change drive scan logic so it catches Unassigned Devices encrypted drives as well.
+
+###v0.5
+- Some code tidy-up
+
+###v0.4
+- Change script name
+- Notify when cleaning up
+- Enforce limited character set on new key
+
+###v0.3
+- Activate cleanup trap
+
+###v0.2
+- Initial versioning
+</CHANGES>
+
+
+<FILE Name="&plugindir;/README.md" Mode="644">
+<INLINE>
+**Change drive(s) encryption unlock key**
+
+This plugin installs a script that allows you to change your encryption unlock key.
+
+</INLINE>
+</FILE>
+
+
+<FILE Run="/bin/bash" Method="install">
+<INLINE>
+
+Log () {
+echo "$@"
+logger -t "&name; plugin" "$@"
+}
+
+Log &name; v&version; installing
+
+&debug; &amp;&amp; exec 2&gt;&amp;1
+&debug; &amp;&amp; set -x
+
+rm -fr &plugindir;/*
+
+mkdir -p &pluginpermdir;
+
+wget -q -t 3 -O /tmp/&script; &scriptURL; &amp;&amp;
+    mv /tmp/&script; &pluginpermdir;/&script;
+
+[ -f &pluginpermdir;/&script; ] || {
+    Log "Error: Cannot retrieve script file. Installation aborted."
+    exit 1
+} 
+
+install &pluginpermdir;/&script; -m 755 -Dt &scriptdir;
+
+Log "&scriptdir;/&script; installed."
+
+exit 0
+</INLINE>
+</FILE>
+
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+Log () {
+echo "$@"
+logger -t "&name; plugin" "$@"
+}
+
+&debug; &amp;&amp; exec 2&gt;&amp;1
+&debug; &amp;&amp; set -x
+
+rm &scriptdir;/&script;
+Log "&scriptdir;/&script; removed."
+##rm -fr &pluginpermdir;
+
+
+rm -fr "&plugindir;"
+</INLINE>
+</FILE>
+
+</PLUGIN>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Containers>
+<Plugin>True</Plugin>
+<PluginURL>https://raw.githubusercontent.com/doron1/unraid-newenckey/master/unraid-newenckey.plg</PluginURL>
+<PluginAuthor>doron</PluginAuthor>
+<Beta>False</Beta>
+<Category>Tools:System Drivers:</Category>
+<Name>New Unlock Key for Encrypted Drives</Name>
+<Description>
+A tool that enables you to change the unlock key of your encrypted drives.
+
+This is a CLI script. The plugin simply installs the script.
+
+Each of the current and new unlock keys can either be a text password / passphrase, or a binary key file if you're into those (I am). 
+
+Your array must be started to use this tool.
+
+</Description>
+<Date>2021-09-21</Date>
+</Containers>

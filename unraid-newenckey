@@ -1,0 +1,366 @@
+#!/bin/bash
+
+##########################################################
+#
+# Change the LUKS key/passphrase of all LUKS block devices 
+# that are currently open ("unlocked") - primarily, Unraid
+# array and cache drives.
+# Basic assumption is that all of them are ruled by one 
+# common key, as is the case with Unraid array and cache
+# at this time, although this assumption is tested and validated.
+#
+#
+# Usage:  unraid-newenckey [current-key-file] [new-key-file]
+#
+# Both positional arguments are optional. If provided, 
+# each of them is either the name of a file (containing 
+# a passphrase or a binary key), or a single dash (-).
+# For each of the arguments, if it is either omitted or
+# specified as a dash, the respective key will be prompted
+# for interactively.
+#
+# Note: if you provide a key file with a passphrase you
+# later intend to use interactively when starting the array
+# (the typical Unraid use case), make sure the file does 
+# not contain an ending newline.
+# One good way to do that is to use "echo -n", e.g.:
+#
+#      echo -n "My Good PassPhrase" > /tmp/mykeyfile
+#
+# This code has been tested, but no warranty is expressed
+# or implied. Use at your own risk.
+#
+# With the above out of the way, please report any issues.
+#
+#
+# (c) 2019-2021 @doron - CC BY-SA 4.0
+#
+#
+VERSION="0.8"
+# Changelog:
+#
+# 2021-09-19  v0.8
+#	* Add "usage" text
+#	* Add underscore to valid characters
+# 2021-08-16  v0.7
+#       * Update for Unraid 6.10: lsblk has changed in an incompatible way. This version 0.7
+#         should be backwards compatible with previous Unraid versions.
+# 2020-10-14  v0.6
+#	* Change drive scan logic so it catches Unassigned Devices encrypted drives as well.
+# 2019-12-07  v0.5
+#	* Some code tidy-up
+# 2019-11-24  v0.4
+#	* Change script name
+#	* Notify when cleaning up
+#	* Enforce limited character set on new key
+# 2019-11-21  v0.3
+#	* Activate cleanup trap
+# 2019-11-20  v0.2
+#	* Initial versioning
+##########################################################
+
+
+ME=$(basename $0)
+DEBUG=false
+
+VALID_CHARS='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=+_ '
+
+
+TMPNEW=/tmp/luksnewkey$$
+TMPOLD=/tmp/luksoldkey$$
+rm -f $TMPNEW $TMPOLD || exit $?
+
+
+ARG1=$1
+ARG2=$2
+
+_R="\033[31m"
+_T="\033[0m"
+
+set +o posix	# In case we were invokved with "sh <name>". Meh.
+trap "Cleanup" EXIT
+
+##########################################################
+#
+# Main program flow
+#
+##########################################################
+
+main() {
+
+Tell "\n== $ME v$VERSION, made for Unraid, change encrypted volumes' unlock key. @doron ==\n"
+
+[[ "$ARG1" =~ ^-h$|^--help$|^--usage$ ]] && Usage
+[[ "$ARG1" =~ ^- || "$ARG2" =~ ^- ]] &&
+	ScramWith "Invalid flag(s) specified."
+
+[[ "$ARG1" == "" || "$ARG1" == "-" || -f "$ARG1" ]] || 
+	ScramWith "File $ARG1 does not exist."
+[[ "$ARG2" == "" || "$ARG2" == "-" || -f "$ARG2" ]] || 
+	ScramWith "File $ARG2 does not exist."
+
+
+#
+# Get a list of open LUKS-encrypted block devices
+#
+
+declare -A LUKSMOUNTPOINT
+LUKSDEVS=""
+while read LINE ; do
+	eval "$LINE"					# lsblk output is var=value pairs
+	BDEV=$(/bin/ls /sys/dev/block/$MAJ_MIN/slaves)	# From mapped dev to enclosing dev
+	if [ -b /dev/$BDEV ] ; then
+		LUKSDEVS+="$BDEV "
+		LUKSMOUNTPOINT[$BDEV]="${MOUNTPOINT#/mnt/}"
+	fi
+done < <(lsblk --pairs --output NAME,TYPE,MOUNTPOINT,MAJ:MIN |
+	sed 's/MAJ:MIN/MAJ_MIN/' |
+	grep 'TYPE="crypt"' )
+
+[[ $(wc -w <<< $LUKSDEVS) == 0 ]] && 
+	ScramWith "No open LUKS devices found. (Is the array started?)"
+
+##$DEBUG && LUKSDEVS+=" sr0" # Contaminate list
+##$DEBUG && LUKSDEVS="sdc1 sr0" # Contaminate list
+
+#
+# Obtain the "old" (current) key
+#
+
+if [[ "$ARG1" == "" || "$ARG1" == '-' ]] ; then
+	GetPass OLDKEY "current key"
+	echo -n "$OLDKEY" > $TMPOLD
+else
+	[[ -f "$ARG1" ]] || ScramWith "File $ARG1 does not exist."
+	cp $ARG1 $TMPOLD
+fi
+
+#
+# Test old key on devices
+#
+
+Tellnr "*** Testing provided key against disks..."
+
+OPENED="" ; OPENDEVS="" ; FAILEDOPEN=""
+for DISK in $LUKSDEVS ; do
+
+	Tellnr " ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+	if cryptsetup luksOpen --test-passphrase --key-file $TMPOLD /dev/$DISK 2>/dev/null  
+	then
+		OPENED+="${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+		OPENDEVS+="$DISK "
+	else
+		FAILEDOPEN+="${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+	fi
+done
+
+Tellnr "... done.\n"
+
+if [[ "$OPENDEVS" == "" ]] ; then
+
+	ScramWith "Key provided as current does not open any of the encrypted devices."
+fi
+
+#
+# Obtain new key
+#
+
+if [[ "$ARG2" == "" || "$ARG2" == '-' ]] ; then
+  while true ; do
+
+ 	GetPass NEWKEY "new key"
+
+	if [ "${NEWKEY//[$VALID_CHARS]}" ] ; then
+		Tell "Key contains unsupported characters. Please enter a different key."
+		Tell "Valid characters are: \"$VALID_CHARS\""
+		continue
+	fi
+
+	GetPass NEWKEYV "new key again for verification"
+	[[ "$NEWKEY" == "$NEWKEYV" ]] && break
+
+	Tell "The two keys do not match; try again."
+
+  done
+
+  $DEBUG && echo "Collected key: \"$NEWKEY\""
+
+  echo -n "$NEWKEY" > $TMPNEW
+
+else
+
+	[[ -f "$ARG2" ]] || ScramWith "File $ARG2 does not exist."
+	cp $ARG2 $TMPNEW
+
+fi
+
+#
+# Report findings, ask for permission to proceed
+#
+
+
+if [[ "$FAILEDOPEN" != "" ]] ; then
+
+	Tell "${_R}*** IMPORTANT: following disks can NOT be opened by the Current Key provided:"
+	Tell "*** ${FAILEDOPEN}${_T}"
+
+fi
+
+Tell "If we proceed, the following disks will have their keys replaced:"
+Tell "$OPENED"
+Tell "Please check the above carefully before confirming! Is everything as expected?"
+Yesno
+
+
+#
+# Verification done. Just do it.
+#
+
+Tellnr "\n*** Adding new key... "
+
+HALFDONEDEVS=""
+
+for DISK in $OPENDEVS ; do
+
+  Tellnr " ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+  cryptsetup luksAddKey --key-file $TMPOLD /dev/$DISK $TMPNEW ||
+	ScramWith "Add key failed on ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) - please check and report."
+  HALFDONEDEVS+="$DISK "
+
+done
+
+HALFDONEDEVS=""
+
+Tellnr "\n*** Deleting old key... "
+
+for DISK in $OPENDEVS ; do
+  Tellnr " ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+  cryptsetup luksRemoveKey /dev/$DISK $TMPOLD ||
+	ScramWith "Remove old key failed on ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) - please check and report."
+
+done
+
+Tell "\nThat's all, folks!"
+
+}
+
+##########################################################
+#
+# Functions
+#
+##########################################################
+
+
+# Prompt for password (asterisk prompt), assign result into var name passed as $1
+GetPass() {
+
+  local WHAT=${2:-password}
+
+  local PASS=""
+  while [ "$PASS" == "" ] ; do 
+
+        PROMPT="Enter ${WHAT}: "
+
+	echo
+	while IFS= read -rsp "$PROMPT" -n 1 CHAR ; do
+
+		case $CHAR in
+	
+		$'\0' ) break ;; 	# Enter - done
+
+		$'\177' | $'\10' )	# Backspace / Del
+        		PROMPT=$'\b \b'
+        		PASS="${PASS%?}"
+		;;
+
+		* )			# Accept char
+			PROMPT='*'
+			PASS+="$CHAR"
+		;;
+		esac
+	done
+
+	echo
+  done
+
+  eval "$1=\"\$PASS\""
+
+}
+
+# Exit with error message
+ScramWith () {
+
+  Tell "Error: $*"
+  Tell "Now exiting."
+  exit 2
+
+}
+
+# Issue message to user
+Tell() {
+  echo -e "\n$*"
+}
+
+# Issue message to user w/o newlines
+Tellnr() {
+  echo -en "$*"
+}
+
+# Ask for confirmation
+Yesno() {
+  local RESP
+  Tellnr "\nType upper-case YES to proceed:"
+  read RESP
+  [[ "$RESP" == "YES" ]] && return
+  ScramWith "Mission aborted by user."
+}
+
+#
+# Clean up: if we're stopping less than halfway into the deed, remove the new key 
+# from all devices to which we added it.
+#
+
+Cleanup() {
+
+
+  if [ "$HALFDONEDEVS" != "" ] ; then
+
+	Tellnr "\n*** Cleaning up... "
+	for DISK in $HALFDONEDEVS ; do
+
+		if (( $(cryptsetup luksDump /dev/$DISK | grep "^Key Slot" | grep -i enabled | wc -l) > 1 )) ; then
+			Tellnr " ${LUKSMOUNTPOINT[$DISK]} (/dev/$DISK) "
+			cryptsetup luksRemoveKey /dev/$DISK $TMPNEW
+		fi
+  	done
+  fi
+
+  shred -u $TMPNEW $TMPOLD 2>/dev/null
+
+}
+
+Usage () {
+
+Tell "Usage:  $ME [current-key-file] [new-key-file]"
+
+Tell "Both positional arguments are optional and may be omitted."
+
+Tell "If provided, each of them is either the name of a file (containing\n\
+a passphrase or a binary key), or a single dash (-)."
+
+Tell "For each of the arguments, if it is either omitted or specified as a dash,\n\
+the respective key will be prompted for interactively."
+
+Tell "Note: if you provide a key file with a passphrase you later intend to use\n\
+interactively when starting the array (the typical use case on Unraid),\n\
+make sure the file does not contain an ending newline. One good way to do\n\
+that is to use \"echo -n\", e.g.:"
+
+Tell "      echo -n \"My Good PassPhrase\" > /tmp/mykeyfile"
+Tell ""
+
+exit 0
+
+}
+
+main "$@"; exit
