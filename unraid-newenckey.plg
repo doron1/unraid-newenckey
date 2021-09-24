@@ -4,7 +4,7 @@
 <!ENTITY name      "unraid-newenckey">
 <!ENTITY author    "doron">
 <!ENTITY version   "0.8">
-<!ENTITY pluginURL "https://raw.githubusercontent.com/doron1/unraid-newenckey/master/newenckey.plg">
+<!ENTITY pluginURL "https://raw.githubusercontent.com/doron1/unraid-newenckey/master/unraid-newenckey.plg">
 <!ENTITY plugindir "/usr/local/emhttp/plugins/&name;">
 <!ENTITY pluginpermdir "/boot/config/plugins/&name;">
 <!ENTITY support   "https://forums.unraid.net/topic/85495-unraid-newenckey-change-your-drive-encryption-unlock-key/">
