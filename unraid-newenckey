@@ -33,12 +33,14 @@
 # With the above out of the way, please report any issues.
 #
 #
-# (c) 2019-2021 @doron - CC BY-SA 4.0
+# (c) 2019-2022 @doron - CC BY-SA 4.0
 #
 #
-VERSION="0.8"
+VERSION="0.9"
 # Changelog:
 #
+# 2021-02-03  v0.9
+#       * Fix a typo in argument parsing (as of v0.8)
 # 2021-09-19  v0.8
 #	* Add "usage" text
 #	* Add underscore to valid characters
@@ -91,7 +93,7 @@ main() {
 Tell "\n== $ME v$VERSION, made for Unraid, change encrypted volumes' unlock key. @doron ==\n"
 
 [[ "$ARG1" =~ ^-h$|^--help$|^--usage$ ]] && Usage
-[[ "$ARG1" =~ ^- || "$ARG2" =~ ^- ]] &&
+[[ "$ARG1" =~ ^-.+ || "$ARG2" =~ ^-.+ ]] &&
 	ScramWith "Invalid flag(s) specified."
 
 [[ "$ARG1" == "" || "$ARG1" == "-" || -f "$ARG1" ]] || 

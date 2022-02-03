@@ -29,10 +29,12 @@ This code has been tested, but no warranty is expressed or implied. Use at your 
 With the above out of the way, please report any issues.
 
 
-(c) 2019-2021 @doron - CC BY-SA 4.0
+(c) 2019-2022 @doron - CC BY-SA 4.0
 
 ## Change Log:
 ```
+2022-02-03 v0.9 	Fix a typo in argument parsing (as of v0.8)
+
 2021-09-21 v0.8 	Package as plugin, install script version 0.8
 			Add "usage" text
 			Add underscore to valid characters
