@@ -55,16 +55,6 @@
 </CHANGES>
 
 
-<FILE Name="&plugindir;/README.md" Mode="644">
-<INLINE>
-**Change drive(s) encryption unlock key**
-
-This plugin installs a script that allows you to change your encryption unlock key.
-
-</INLINE>
-</FILE>
-
-
 <FILE Run="/bin/bash" Method="install">
 <INLINE>
 
@@ -97,6 +87,17 @@ Log "&scriptdir;/&script; installed."
 exit 0
 </INLINE>
 </FILE>
+
+
+<FILE Name="&plugindir;/README.md" Mode="644">
+<INLINE>
+**Change Encryption Unlock Key**
+
+This plugin installs a script that allows you to change your encryption unlock key.
+
+</INLINE>
+</FILE>
+
 
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
