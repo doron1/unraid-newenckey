@@ -10,8 +10,9 @@ Essentially, this tool validates the provided current key against your drives, a
 
 **Important:** The tool does not save the provided new (replacement) key on permanent storage. Make very sure you have it backed up, either in your memory (...) or on some permanent storage (not on the encrypted array :-) ). If you misplace the new key, your data is hosed.
 
-Currently this script needs to be run from the command line. I may add a UI dialog if there's enough interest (and time) - although I'm pretty sure Limetech has this feature on their radar for some upcoming version.
+This tool can be run from the command line, or via the Unraid admin UI, under "Settings" (currently the UI is a wrapper around the script). 
 
+For the CLI script:
 
     Usage:  unraid-newenckey [current-key-file] [new-key-file]
 
@@ -20,7 +21,7 @@ If provided, each of them is either the name of a file (containing a password/pa
 
 For each of the arguments, if it is either omitted or specified as a dash, the respective key will be prompted for interactively.
 
-Note: if you provide a key file with a passphrase you later intend to use interactively when starting the array (the typical use case on Unraid), make sure the file does not contain an ending newline. One good way to do that is to use "echo -n", e.g.:
+Note: if you provide, via the CLI, a key file with a passphrase you later intend to use interactively when starting the array (the typical use case on Unraid), make sure the file does not contain an ending newline. One good way to do that is to use "echo -n", e.g.:
 
       echo -n "My Good PassPhrase" > /tmp/mykeyfile
 
@@ -29,31 +30,33 @@ This code has been tested, but no warranty is expressed or implied. Use at your 
 With the above out of the way, please report any issues.
 
 
-(c) 2019-2024 @doron - CC BY-SA 4.0
+(c) 2019-2026 @doron - CC BY-SA 4.0
 
 ## Change Log:
 ```
-2024.05.24              Enforce typed-in passphrase length limit of 512, 
-                        consistent with cryptsetup and WebGui
-                        Adapt to common version numbering scheme
-2022-02-03 v0.9 	Fix a typo in argument parsing (as of v0.8)
+2026.03.10          Create a UI wrapper around the script, to include in Unraid admin UI
+                    Deploy by a Slackware package
+2024.05.24          Enforce typed-in passphrase length limit of 512, 
+                    consistent with cryptsetup and WebGui
+                    Adapt to common version numbering scheme
+2022-02-03 v0.9     Fix a typo in argument parsing (as of v0.8)
 
-2021-09-21 v0.8 	Package as plugin, install script version 0.8
-			Add "usage" text
-			Add underscore to valid characters
+2021-09-21 v0.8     Package as plugin, install script version 0.8
+                    Add "usage" text
+                    Add underscore to valid characters
 
-2021-08-16 v0.7 	Update for Unraid 6.10: lsblk has changed in an incompatible way. This version 0.7
-			should be backwards compatible with previous Unraid versions.
+2021-08-16 v0.7     Update for Unraid 6.10: lsblk has changed in an incompatible way. This version 0.7
+                    should be backwards compatible with previous Unraid versions.
 
-2020-10-14 v0.6 	Change drive scan logic so it catches Unassigned Devices encrypted drives as well.
+2020-10-14 v0.6     Change drive scan logic so it catches Unassigned Devices encrypted drives as well.
 
-2019-12-07 v0.5 	Some code tidy-up
+2019-12-07 v0.5     Some code tidy-up
 
-2019-11-24 v0.4 	Change script name
-			Notify when cleaning up
-			Enforce limited character set on new key
+2019-11-24 v0.4     Change script name
+                    Notify when cleaning up
+                    Enforce limited character set on new key
 
-2019-11-21 v0.3 	Activate cleanup trap
+2019-11-21 v0.3     Activate cleanup trap
 
-2019-11-20 v0.2 	Initial versioning
+2019-11-20 v0.2     Initial versioning
 ```

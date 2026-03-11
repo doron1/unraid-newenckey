@@ -33,12 +33,14 @@
 # With the above out of the way, please report any issues.
 #
 #
-# (c) 2019-2024 @doron - CC BY-SA 4.0
+# (c) 2019-2026 @doron - CC BY-SA 4.0
 #
 #
-VERSION="2024.05.24"
+VERSION="___VERSION___"
 # Changelog:
 #
+# 2026.03.10
+#	* Add some internal flags for the UI wrapper
 # 2024.05.24
 #       * Enforce typed-in passphrase length limit of 512, consistent with cryptsetup
 #         and WebGui
@@ -69,6 +71,10 @@ VERSION="2024.05.24"
 ME=$(basename $0)
 DEBUG=false
 
+[ -t 0 ] && ON_TTY=true || ON_TTY=false
+DRYRUN=false
+AUTOCONFIRM=false
+
 VALID_CHARS='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*-=+_ '
 
 
@@ -76,9 +82,6 @@ TMPNEW=/tmp/luksnewkey$$
 TMPOLD=/tmp/luksoldkey$$
 rm -f $TMPNEW $TMPOLD || exit $?
 
-
-ARG1=$1
-ARG2=$2
 
 _R="\033[31m"
 _T="\033[0m"
@@ -96,7 +99,18 @@ main() {
 
 Tell "\n== $ME v$VERSION, made for Unraid, change encrypted volumes' unlock key. @doron ==\n"
 
-[[ "$ARG1" =~ ^-h$|^--help$|^--usage$ ]] && Usage
+if [[ "$1" =~ ^-h$|^--help$|^--usage$ ]] ; then 
+	Usage
+elif [[ "$1" =~ ^--dry-run ]] ; then
+	DRYRUN=true
+	shift
+elif [[ "$1" =~ ^--yes ]] && ! $ON_TTY ; then
+	AUTOCONFIRM=true
+	shift
+fi
+
+ARG1=$1
+ARG2=$2
 [[ "$ARG1" =~ ^-.+ || "$ARG2" =~ ^-.+ ]] &&
 	ScramWith "Invalid flag(s) specified."
 
@@ -126,8 +140,6 @@ done < <(lsblk --pairs --output NAME,TYPE,MOUNTPOINT,MAJ:MIN |
 [[ $(wc -w <<< $LUKSDEVS) == 0 ]] && 
 	ScramWith "No open LUKS devices found. (Is the array started?)"
 
-##$DEBUG && LUKSDEVS+=" sr0" # Contaminate list
-##$DEBUG && LUKSDEVS="sdc1 sr0" # Contaminate list
 
 #
 # Obtain the "old" (current) key
@@ -214,9 +226,13 @@ fi
 
 Tell "If we proceed, the following disks will have their keys replaced:"
 Tell "$OPENED"
-Tell "Please check the above carefully before confirming! Is everything as expected?"
-Yesno
 
+$DRYRUN && exit 0
+
+if ! $AUTOCONFIRM ; then
+	Tell "Please check the above carefully before confirming! Is everything as expected?"
+	Yesno
+fi
 
 #
 # Verification done. Just do it.
@@ -296,8 +312,10 @@ GetPass() {
 # Exit with error message
 ScramWith () {
 
-  Tell "Error: $*"
+  {
+  Tell "Error: ${_R}$*${_T}"
   Tell "Now exiting."
+  } >&2
   exit 2
 
 }
