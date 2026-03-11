@@ -23,3 +23,4 @@ jobs:
           # go_dir: plugin-go
           # build_script: ./build.sh
           # changelog_releases: 5
+          build_prereleases: true
