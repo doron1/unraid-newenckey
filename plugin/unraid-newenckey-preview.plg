@@ -18,7 +18,7 @@
 
 ### 2026.03.10
 
-
+- Create a UI wrapper around the script, in the Unraid admin UI under Settings
 
 
 For older releases, see https://github.com/doron1/unraid-newenckey/releases
@@ -27,7 +27,7 @@ For older releases, see https://github.com/doron1/unraid-newenckey/releases
 
 <FILE Name="/boot/config/plugins/unraid-newenckey/unraid-newenckey-2026.03.10-noarch-1.txz">
 <URL>https://github.com/doron1/unraid-newenckey/releases/download/2026.03.10/unraid-newenckey-2026.03.10-noarch-1.txz</URL>
-<SHA256>8972e4877e8d945c741529badef56b5538d7dac586651de6ab35bac602a89476</SHA256>
+<SHA256>c34bef68c3953460c669f3899c874263e86f38e8331c8127a280f5bdcfd59f70</SHA256>
 </FILE>
 
 <!--
