@@ -1,0 +1,87 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN  [
+<!ENTITY name       "unraid-newenckey">
+<!ENTITY author     "doron">
+<!ENTITY version    "2026.03.10">
+<!ENTITY githubtree "dev-addui">
+<!ENTITY support    "https://forums.unraid.net/topic/85495-unraid-newenckey-change-your-drive-encryption-unlock-key/">
+<!ENTITY script     "unraid-newenckey">
+<!ENTITY scriptdir  "/usr/local/sbin">
+<!ENTITY copyright  "(c) 2019-2026 @doron - CC BY-SA 4.0">
+]>
+
+<PLUGIN 
+  name="unraid-newenckey"
+  author="@doron"
+  version="2026.03.10"
+  launch="Settings"
+  pluginURL="https://raw.githubusercontent.com/doron1/unraid-newenckey/&githubtree;/plugin/unraid-newenckey.plg"
+  support="https://forums.unraid.net/topic/85495-unraid-newenckey-change-your-drive-encryption-unlock-key/"
+  min="6.7.0"
+  
+  icon="fa-key"
+>
+
+<CHANGES>
+<![CDATA[
+
+### 2026.03.10
+
+- Create a UI wrapper around the script, to use in Unraid admin UI
+
+
+For older releases, see https://github.com/doron1/unraid-newenckey/releases
+]]>
+</CHANGES>
+
+<FILE Name="/boot/config/plugins/unraid-newenckey/unraid-newenckey-2026.03.10-noarch-1.txz">
+<URL>https://github.com/doron1/unraid-newenckey/releases/download/2026.03.10/unraid-newenckey-2026.03.10-noarch-1.txz</URL>
+<SHA256>01bf61f09c69bf933fbcbc4b3d024db55ef685540cacf67b36a25b9309bf49c2</SHA256>
+</FILE>
+
+<!--
+The 'install' script.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+
+upgradepkg --install-new /boot/config/plugins/unraid-newenckey/unraid-newenckey-2026.03.10-noarch-1.txz
+
+sed -i 's/___VERSION___/&version;/g' &scriptdir;/&script;
+
+# cleanup old versions
+rm -f $(ls /boot/config/plugins/unraid-newenckey/unraid-newenckey-*.txz 2>/dev/null | grep -v '2026.03.10')
+
+echo ""
+echo "----------------------------------------------------"
+echo " unraid-newenckey has been installed."
+echo " Version: 2026.03.10"
+echo " Copyright &copyright;"
+echo "----------------------------------------------------"
+echo ""
+
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+<![CDATA[
+removepkg unraid-newenckey
+
+rm -rf /usr/local/emhttp/plugins/unraid-newenckey
+#rm -rf /boot/config/plugins/unraid-newenckey
+
+echo ""
+echo "----------------------------------------------------"
+echo " unraid-newenckey has been removed."
+echo "----------------------------------------------------"
+echo ""
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
