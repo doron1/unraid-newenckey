@@ -36,7 +36,7 @@ For older releases, see https://github.com/doron1/unraid-newenckey/releases
 
 <FILE Name="/boot/config/plugins/unraid-newenckey/unraid-newenckey-2026.03.10-noarch-1.txz">
 <URL>https://github.com/doron1/unraid-newenckey/releases/download/2026.03.10/unraid-newenckey-2026.03.10-noarch-1.txz</URL>
-<SHA256>01bf61f09c69bf933fbcbc4b3d024db55ef685540cacf67b36a25b9309bf49c2</SHA256>
+<SHA256>dd90faf4f3185df51d5f447508b1dd0749e616ce52600ab0b4c82d43457a79f9</SHA256>
 </FILE>
 
 <!--
@@ -72,7 +72,7 @@ The 'remove' script.
 removepkg unraid-newenckey
 
 rm -rf /usr/local/emhttp/plugins/unraid-newenckey
-#rm -rf /boot/config/plugins/unraid-newenckey
+rm -rf /boot/config/plugins/unraid-newenckey
 
 echo ""
 echo "----------------------------------------------------"
