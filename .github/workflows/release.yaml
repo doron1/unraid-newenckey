@@ -25,4 +25,5 @@ jobs:
           # build_script: ./build.sh
           # changelog_releases: 5
           # build_prereleases: false
+          fetch-depth: 0
           
