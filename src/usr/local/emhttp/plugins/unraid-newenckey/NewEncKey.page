@@ -1,0 +1,8 @@
+Menu="Utilities"
+Title="New Encryption Key"
+Icon="red-key-ring-th.png"
+Tag="key"
+---
+<?PHP
+require_once "/usr/local/emhttp/plugins/unraid-newenckey/NewEncKey.php";
+?>
