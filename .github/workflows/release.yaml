@@ -19,7 +19,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Optional:
-          plg_branch: main
+          # plg_branch: main
           # composer_dir: plugin-php
           # go_dir: plugin-go
           # build_script: ./build.sh

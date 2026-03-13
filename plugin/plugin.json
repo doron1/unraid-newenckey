@@ -1,7 +1,7 @@
 {
     "name": "unraid-newenckey",
     "package_name": "unraid-newenckey",
-    "author": "@doron",
+    "author": "doron",
     "min": "6.7.0",
     "icon": "fa-key",
     "support": "https://forums.unraid.net/topic/85495-unraid-newenckey-change-your-drive-encryption-unlock-key/",
