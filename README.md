@@ -34,8 +34,8 @@ With the above out of the way, please report any issues.
 
 ## Change Log:
 ```
-2026.03.10          Create a UI wrapper around the script, to include in Unraid admin UI
-                    Deploy by a Slackware package
+2026.03.10          Create a UI wrapper around the script, for use in the Unraid admin UI
+                    Deploy by a Slackware package and @dkaser release tool
 2024.05.24          Enforce typed-in passphrase length limit of 512, 
                     consistent with cryptsetup and WebGui
                     Adapt to common version numbering scheme
