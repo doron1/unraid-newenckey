@@ -1,3 +1,13 @@
+# ***DISCONTINUED***
+
+This plugin has reached the end of its lifespan, as Unraid now has this functionality baked in. Twas a nice journey while it lasted.
+
+--------
+--------
+--------
+--------
+
+
 # unraid-newenckey
 Drive encryption is one of Unraid's many good features. When you encrypt part or all of your array and cache, at some point you might end up wanting to change your unlock key. Just how often, would depend on your threat model (and on your level of paranoia).
 
